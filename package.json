@@ -1,0 +1,11 @@
+{
+  "name": "ptotool",
+  "version": "1.0.0",
+  "description": "A tool to build and inspect .PTO files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Blake Leonard <blake@b252.gq>",
+  "license": "CC-BY-4.0"
+}
