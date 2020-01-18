@@ -7,5 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Blake Leonard <blake@b252.gq>",
-  "license": "CC-BY-4.0"
+  "license": "CC-BY-4.0",
+  "dependencies": {
+    "fstream": "^1.0.12",
+    "tar": "^5.0.5",
+    "uuid": "^3.4.0",
+    "yargs": "^15.1.0"
+  }
 }
