@@ -79,10 +79,10 @@ function json(manifest) {
 		//let num = Number(ruuid).toString(16);
 		let x = Array.from(ruuid,(v) => {return Number.parseInt(v,16)});
 		x.map((v)=>{bytearray.push(v)})
-		console.log(x,ruuid)
+		/*console.log(x,ruuid)
 		var decon_test = "";
 		x.map((v) => {decon_test += v.toString(16).padStart(2,"0")})
-		console.log(decon_test.toUpperCase())
+		console.log(decon_test.toUpperCase())*/
 		//Deconstruction seems to work. Just make sure you get the right length (16 bytes/array entries)
 		//bytearray.concat(x);
 		bytearray.push(0xff);
