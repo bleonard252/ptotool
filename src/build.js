@@ -87,5 +87,23 @@ function json(manifest) {
 		//bytearray.concat(x);
 		bytearray.push(0xff);
 	}
+	if (manifest.type && typeof manifest.type == "string") {
+		bytearray.push(0x04,0xfe);
+		if (manifest.type.match(/^app(lication)?$/)) bytearray.push(0x00)
+		else if (manifest.type == "image") bytearray.push(0x01)
+		else if (manifest.type == "audio") bytearray.push(0x02)
+		else if (manifest.type == "video") bytearray.push(0x03)
+		else if (manifest.type == "appdata") bytearray.push(0x10)
+		else {console.warn("[build/json: WARN] Invalid data type! PTO files must have a type of application, image, audio, video, or appdata. An error value is being used instead (0x9999)."); 
+			bytearray.push(0x99,0x99)} // in the bytes, 99 99 is easier to read. invalid PTO type
+		bytearray.push(0xff);
+	}
+	if (manifest.apptype && typeof manifest.apptype == "string") {
+		bytearray.push(0x04,0x00,0xfe);
+		if (manifest.apptype == "html") bytearray.push(0x01)
+		else {console.warn("[build/json: WARN] Invalid app type! PTO-based applications must have a valid app type. An error value is being used instead (0x9999).");
+			bytearray.push(0x99,0x99)}
+		bytearray.push(0xff);
+	}
 	return bytearray
 }
