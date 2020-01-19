@@ -43,7 +43,7 @@ if (!module.parent) { // if running from a script
             } catch(e) {mf = {};}
             build(mf, args.file, args.datadir || 0, args.output)
         })
-        .command("inspect <file>")
+        .command("inspect <file>") //TODO: there should be an option ignore-invalid, which silences the invalid type/field warnings
         .help()
         //.command("help", "Show this help", (yargs) => {
         //    yargs.showHelp()
@@ -53,3 +53,5 @@ if (!module.parent) { // if running from a script
         .alias("h", "help")
         .argv
 }
+
+var argv = yargs.argv || {}

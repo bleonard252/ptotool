@@ -81,7 +81,7 @@ function headparse(trimmed,manifest) {
         else if (x == "03") manifest.type = "video";
         else if (x == "10") manifest.type = "appdata";
         else {
-            console.warn("[extract/headparse: WARN] Invalid data type! Embedding directly as shown, as this may be intended behavior.");
+            if (!argv["ignore-invalid"]) console.warn("[extract/headparse: WARN] Invalid data type! Embedding directly as shown, as this may be intended behavior.");
             manifest.type = x;
         }
         trimmed = trimmed.substr(trimpoint + 2);
@@ -91,10 +91,19 @@ function headparse(trimmed,manifest) {
         let x = trimmed.substr(0,trimpoint);
         if (x == "00") manifest.apptype = "html";
         else {
-            console.warn("[extract/headparse: WARN] Invalid data type! Embedding directly as shown, as this may be intended behavior.");
+            if (!argv["ignore-invalid"]) console.warn("[extract/headparse: WARN] Invalid app type! Embedding directly as shown, as this may be intended behavior.");
             manifest.apptype = x;
         }
         trimmed = trimmed.substr(trimpoint + 2);
+    }
+    else {
+        let key = trimmed.substr(0,trimmed.indexOf("fe"))
+        if (!argv["ignore-invalid"]) console.warn("[extract/headparse: WARN] Invalid field ("+key+")! Using the default settings, as this may be intended behavior.");
+        trimmed = trimmed.substr(key.length + 2);
+        let value = trimmed.substr(0,trimmed.indexOf("ff"))
+        let trimpoint = trimmed.indexOf("ff");
+        let x = trimmed.substr(0,trimpoint);
+        manifest[key] = value
     }
     return [trimmed, manifest];
 }
