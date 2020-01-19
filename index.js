@@ -43,6 +43,7 @@ if (!module.parent) { // if running from a script
             } catch(e) {mf = {};}
             build(mf, args.file, args.datadir || 0, args.output)
         })
+        .command("inspect <file>")
         .help()
         //.command("help", "Show this help", (yargs) => {
         //    yargs.showHelp()
