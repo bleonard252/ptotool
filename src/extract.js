@@ -1,5 +1,7 @@
 var fs = require("fs");
 //var fstream = require('fstream');
+tar = require('tar'),
+    zlib = require('zlib');
 
 /**
  * The function responsible for reading PTO files.
@@ -22,9 +24,28 @@ module.exports = function extract(input) {
         trimmed = x[0] || trimmed;
         HEAD_data = x[1] || HEAD_data;
     }
+    trimmed = trimmed.substr(6)
     // Begin parsing CODE section
-
-    //...
+    var CODE_inpoint = fullstring.length - trimmed.length;
+    //if (manifest.codelength) {
+    //  var CODE_length = manifest.codelength // number of bytes
+    //} else {
+        var CODE_length = trimmed.indexOf("0101c4") / 2; // number of array elements, as each is two chars long
+    //}
+    var CODE_data = fullbuffer.filter((v,i,a) => {return CODE_inpoint < i < (CODE_inpoint + CODE_length)});
+    trimmed = trimmed.substr((CODE_length * 2) + 6);
+    // Begin parsing ARCH section
+    var ARCH_inpoint = fullstring.length - trimmed.length;
+    //if (manifest.archlength) {
+    //  var ARCH_length = manifest.archlength // number of bytes
+    //} else {
+        var ARCH_length = trimmed.indexOf("0101c4") / 2; // number of array elements, as each is two chars long
+    //}
+    if (ARCH_length) console.warn("[extract/extract: WARN] Archives are not optimized. These may be big and everything is currently stored in memory.");
+    var ARCH_data = fullbuffer.filter((v,i,a) => {return ARCH_inpoint < i < (ARCH_inpoint + ARCH_length)});
+    trimmed = trimmed.substr((ARCH_length * 2) + 6);
+    // Begin returning the data
+    return { HEAD_data, CODE_data, ARCH_data }
 }
 
 /**
@@ -48,7 +69,7 @@ function headparse(trimmed,manifest) {
     } else if (trimmed.startsWith("03fe")) { // UUID
         trimmed = trimmed.substr(4);
         manifest.uuid = trimmed.substr(0,32);
-        manifest.uuid.replace(/(........)(....)(....)(....)(.{12})/, "$1-$2-$3-$4-$5");
+        manifest.uuid.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5");
         trimmed = trimmed.substr(34); //UUID has a set length and should still be followed by FF
     } else if (trimmed.startsWith("04fe")) {
         trimmed = trimmed.substr(4);
