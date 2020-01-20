@@ -242,6 +242,6 @@ function stream_extract(filename) {
             //.pipe(ARCH_stream);
     } else ARCH_path = "";
     //console.debug(ARCH_fstream);//{ HEAD_data, CODE_path, ARCH_path })
-    resolve({ HEAD_data, CODE_path, ARCH_path })
+    resolve({ HEAD_data, CODE_path, ARCH_path });
     })})
 }
