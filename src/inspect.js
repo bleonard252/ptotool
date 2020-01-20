@@ -5,7 +5,7 @@ module.exports = async function inspect(filename) {
     //extracted.CODE_data = []; //don't need it. free up that memory
     //extracted.ARCH_data = []; //don't need it either. free up that memory
     var manifest = extracted.HEAD_data;
-    console.log(extracted);
+    //console.log(extracted);
     
     console.log("FILE METADATA");
     if (manifest.name) console.log("Name: "+manifest.name);
