@@ -10,7 +10,8 @@
   "license": "CC-BY-4.0",
   "dependencies": {
     "fstream": "^1.0.12",
-    "tar": "^5.0.5",
+    "tar-fs": "^2.0.0",
+    "tar-stream": "^2.1.0",
     "uuid": "^3.4.0",
     "yargs": "^15.1.0"
   }

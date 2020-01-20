@@ -41,7 +41,7 @@ if (!module.parent) { // if running from a script
             try {
                 if (args.manifest) mf = JSON.parse(fs.readFileSync(args.manifest));
             } catch(e) {mf = {};}
-            build(mf, args.file, args.datadir || 0, args.output)
+            build(mf, args.file, args.datadir.toString() || "-", args.output)
         })
         .command("inspect <file>", "Get metadata about a PTO file", (yargs) => {
             //TODO: there should be an option ignore-invalid, which silences the invalid type/field warnings
@@ -69,5 +69,7 @@ if (!module.parent) { // if running from a script
         .alias("h", "help")
         .argv
 }
+
+//var Promise = (async function() {while (true) {}})()
 
 var argv = yargs.argv || {}

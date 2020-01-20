@@ -1,13 +1,16 @@
-var fs = require("fs");
-//var fstream = require('fstream');
-tar = require('tar'),
+var fs = require("fs"),
+    os = require("os"),
+    path = require("path"),
+    fstream = require('fstream'),
+    tar = require('tar-fs'),
     zlib = require('zlib');
 
 /**
  * The function responsible for reading PTO files.
  * @param input The path to the PTO file to read.
  */
-module.exports = function extract(input) {
+module.exports = stream_extract;
+function extract(input) {
     var fullbuffer = Buffer.from(fs.readFileSync(input));
     var fullstring = fullbuffer.toString('hex'); /*(() => {
         let part = Array.from(fullbuffer).map((v) => {
@@ -98,16 +101,21 @@ function headparse(trimmed,manifest) {
         }
         trimmed = trimmed.substr(trimpoint + 2);
     }
-    else {
+    /*else {
         let key = trimmed.substr(0,trimmed.indexOf("fe")+1)
         if (!(Array.from(process.argv).includes("--ignore-invalid") || Array.from(process.argv).includes("-i"))) console.warn("[extract/headparse: WARN] Invalid field ("+key+")! Using the default settings, as this may be intended behavior.");
         trimmed = trimmed.substr(key.length + 3);
         let value = trimmed.substr(0,trimmed.indexOf("ff"))
         let trimpoint = trimmed.indexOf("ff");
+        if (trimpoint < 0) {
+            trimmed = "";
+            return [trimmed, manifest]
+        }
         let x = trimmed.substr(0,trimpoint+1);
         manifest[key] = value
+        console.debug(trimmed, trimpoint);
         trimmed = trimmed.substr(trimpoint + 2);
-    }
+    }*/ //for some reason, the program never exits if this is on.
     // console.debug(trimmed)
     // process.exit(1);
     return [trimmed, manifest];
@@ -131,4 +139,109 @@ function htoa(hex) {
         result = result + String.fromCharCode(parseInt(v, 16));
     })
     return result;
+}
+
+// usestreams functions
+function stream_extract(filename) {
+    var END_DATA = {};
+    var file = fs.createReadStream(filename);
+    var found = false;
+    var HEAD_string = "";
+    var HEAD_data = {};
+    file.setEncoding("hex");
+    return new Promise((resolve, reject) => {
+    file.once("readable", () => {
+    while (found == false) { //BEGIN TRIMMING PROCESS!
+        if (file.readableLength && file.readable) {
+        let $1 = file.read(2); //get one byte
+        let $3 = $1.padStart(2,"0");
+        HEAD_string += $3;
+        if (HEAD_string.endsWith("0101c4")) {
+            HEAD_string = "";
+            found = true;
+        }
+    }};
+    found = false;
+    while (found == false) { //Snip down the head section.
+        let $1 = file.read(2); //get one byte
+        //console.debug($1);
+        let $3 = $1.padStart(2,"0");
+        HEAD_string += $3;
+        if (HEAD_string.endsWith("ff0101c4")) { //ends a value, then ends the section
+            HEAD_string.replace("ff0101c4","");
+            found = true;
+            //console.debug(HEAD_string);
+        }
+    }
+    found = false;
+    while (HEAD_string !== "0101c4") {
+        let x = headparse(HEAD_string, HEAD_data)
+        HEAD_string = x[0] || HEAD_string;
+        HEAD_data = x[1] || HEAD_data;
+        //console.debug(x)
+    }
+    //nothing expects buffers yet. we can safely switch to streams :-)
+
+    // BEGIN CODE SECTION
+    var CODE_length = 0;
+    //if (manifest.codelength) {
+    //  CODE_length = manifest.codelength // number of bytes
+    //}
+    file.setEncoding("utf8"); //give me the buffers
+    var CODE_path = os.tmpdir + "/.tmp-"+path.parse(filename).name+".pto.code";
+    var CODE_stream = fs.createWriteStream(CODE_path);
+    var CODE_lastbytes = []; //get the last 3 bytes, looking for a 0101c4*
+    if (!CODE_length) { //this is the case, as CODE_length == 0
+        while (found == false) {
+            var $1 = file.read(2);
+            CODE_lastbytes.push($1);
+            if (CODE_lastbytes.length > 3) CODE_lastbytes.shift();
+            if (CODE_lastbytes.includes(null)) throw new Error("[extract/stream_extract: ERROR] Reached end of file too soon!");
+            else if (CODE_lastbytes[0] == '01' && CODE_lastbytes[1] == '01' && CODE_lastbytes[2] == 'c4') {
+                found = true;
+                CODE_stream.end();
+            }
+            else if (CODE_lastbytes.length == 3) {CODE_stream.write(Buffer.from([Number.parseInt(CODE_lastbytes[0],16)]))} //so, write the first thing in the buffer, that will get removed
+        }
+    }
+    found = false;
+
+    // BEGIN ARCH SECTION
+    var ARCH_length = 0;
+    //if (manifest.ARCHlength) {
+    //  ARCH_length = manifest.ARCHlength // number of bytes
+    //}
+    // TODO: since this is the tgz filepath, extract to a tmpdir from this file
+    var ARCH_file_path = os.tmpdir + "/.tmp-"+path.parse(filename).name+".pto.arch.tmp";
+    var ARCH_stream = fs.createWriteStream(ARCH_file_path);
+    file.setEncoding('hex');
+    var ARCH_lastbytes = []; //get the last 5 bytes, looking for a 0101c4*
+    if (!ARCH_length) { //this is the case, as ARCH_length == 0
+        while (found == false) {
+            while (found == false) {
+                var $1 = file.read(2);
+                ARCH_lastbytes.push($1);
+                if (ARCH_lastbytes.length > 3) ARCH_lastbytes.shift();
+                if (ARCH_lastbytes.includes(null)) throw new Error("[extract/stream_extract: ERROR] Reached end of file too soon!");
+                else if (ARCH_lastbytes[0] == '01' && ARCH_lastbytes[1] == '01' && ARCH_lastbytes[2] == 'c4') {
+                    found = true;
+                    ARCH_stream.end();
+                }
+                else if (ARCH_lastbytes.length == 3) {ARCH_stream.write(Buffer.from([Number.parseInt(ARCH_lastbytes[0],16)]))} //so, write the first thing in the buffer, that will get removed
+            }
+        }
+    }
+    found = false;
+    // BEGIN ARCH EXTRACT
+    var ARCH_path = os.tmpdir + "/.tmp-"+path.parse(filename).name+".pto.arch"; //fs.mkdtempSync(".tmp-pto-ARCH.");
+    if (ARCH_lastbytes.length > 0) {
+        //ARCH_stream = fstream.DirWriter({ 'path': ARCH_path });
+        var ARCH_fstream = fs.createReadStream(ARCH_file_path)
+            .pipe(zlib.createGunzip())
+            .pipe(tar.extract(ARCH_path));
+            //.pipe(ARCH_stream);
+    } else ARCH_path = "";
+    //console.debug(ARCH_fstream);//{ HEAD_data, CODE_path, ARCH_path })
+    resolve({ HEAD_data, CODE_path, ARCH_path })
+    })})
 }

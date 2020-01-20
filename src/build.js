@@ -1,5 +1,5 @@
 var fstream = require('fstream'),
-    tar = require('tar'),
+    tar = require('tar-fs'),
     zlib = require('zlib');
 var fs = require("fs");
 
@@ -22,24 +22,35 @@ module.exports = function build(manifest_json, mainfile, archivefile, outfile) {
 	else {console.error("[build] Stopped: File already exists"); return}
 	// Convert manifest from JSON to PTO Manifest format
 	HEAD_DATA = Buffer.from(json(manifest_json));
-	if (typeof mainfile == "string") var CODE_stream = new fs.createReadStream(mainfile);
+	if (typeof mainfile == "string") var CODE_stream = fs.createReadStream(mainfile);
 	else CODE_DATA = Buffer.from(mainfile);
 	//var ARCH_TMP = fs.mkdtempSync("ptoarch")
-	if (archivefile !== "-") var ARCH_STRM = fstream.Reader({ 'path': archivefile, 'type': 'Directory' }) /* Read the source directory */
-		.pipe(new tar.Pack()) /* Convert the directory to a .tar file */
-		.pipe(zlib.Gzip()) /* Compress the .tar file */
-		//.pipe(fstream.Writer({ 'path': ARCH_TMP })); /* Give the output file name */
+	if (archivefile !== "-") var ARCH_STRM = tar.pack(archivefile+"")//) /* Convert the directory to a .tar file */
+	.pipe(zlib.Gzip()); /* Compress the .tar file */
 	//ARCH_DATA = Buffer.from(fs.readDir(archivefile));
 	//TODO: add CODE and ARCH lengths
 	// Write the file
 	OutStream.write(Buffer.from(SEP_ARRAY));
 	OutStream.write(HEAD_DATA)
 	OutStream.write(Buffer.from(SEP_ARRAY));
-	if (CODE_stream) CODE_stream.pipe(OutStream, {end: true});
-	else OutStream.write(CODE_DATA);
-	OutStream.write(Buffer.from(SEP_ARRAY));
-	if (archivefile !== "-") ARCH_STRM.pipe(OutStream, {end: true}); // pipe in the archive
-	OutStream.write(Buffer.from(SEP_ARRAY));
+	if (CODE_stream) CODE_stream.pipe(OutStream, {end: false});
+	else OutStream.write(CODE_DATA); //It suddenly stops writing data here
+	if (CODE_stream) CODE_stream.on("end", () => {
+		OutStream.write(Buffer.from(SEP_ARRAY));
+		if (archivefile !== "-") ARCH_STRM.pipe(OutStream, {end: false}); // pipe in the archive
+		if (archivefile !== "-") ARCH_STRM.on("end", () => {
+			OutStream.write(Buffer.from(SEP_ARRAY));
+		})
+		else OutStream.write(Buffer.from(SEP_ARRAY));
+	})
+	else {
+		OutStream.write(Buffer.from(SEP_ARRAY));
+		if (archivefile !== "-") ARCH_STRM.pipe(OutStream, {end: false}); // pipe in the archive
+		if (archivefile !== "-") ARCH_STRM.on("end", () => {
+			OutStream.write(Buffer.from(SEP_ARRAY));
+		})
+		else OutStream.write(Buffer.from(SEP_ARRAY));
+	}
 }
 
 function json(manifest) {

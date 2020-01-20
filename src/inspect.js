@@ -1,10 +1,11 @@
 var extract = require("./extract");
 
-module.exports = function inspect(filename) {
-    var extracted = extract(filename);
-    extracted.CODE_data = []; //don't need it. free up that memory
-    extracted.ARCH_data = []; //don't need it either. free up that memory
+module.exports = async function inspect(filename) {
+    var extracted = await extract(filename);
+    //extracted.CODE_data = []; //don't need it. free up that memory
+    //extracted.ARCH_data = []; //don't need it either. free up that memory
     var manifest = extracted.HEAD_data;
+    //console.log(extracted);
     
     console.log("FILE METADATA");
     if (manifest.name) console.log("Name: "+manifest.name);
@@ -14,4 +15,5 @@ module.exports = function inspect(filename) {
     if (manifest.type) console.log("\nAPP INFORMATION")
     if (manifest.type) console.log("File type: "+manifest.type);
     if (manifest.type && manifest.apptype) console.log("App type: "+manifest.apptype)
+    return
 }
