@@ -4,6 +4,10 @@ const version = require("./package.json").version;
 
 var build = require("./src/build");
 var inspect = require("./src/inspect");
+var extract = require("./src/extract");
+
+module.exports.build = build
+module.exports.extract = extract
 
 if (!module.parent) { // if running from a script
     var yargs = require("yargs")
