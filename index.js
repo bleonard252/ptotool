@@ -3,6 +3,7 @@ var fs = require("fs");
 const version = require("./package.json").version;
 
 var build = require("./src/build");
+var inspect = require("./src/inspect");
 
 if (!module.parent) { // if running from a script
     var yargs = require("yargs")
@@ -36,14 +37,29 @@ if (!module.parent) { // if running from a script
             //yargs.demandOption(["file"], "You have to have something to encode to a PTO file!")
         }, (args) => {
             // Build
-            // TODO: where does the manifest come from?
             let mf = {};
             try {
                 if (args.manifest) mf = JSON.parse(fs.readFileSync(args.manifest));
             } catch(e) {mf = {};}
             build(mf, args.file, args.datadir || 0, args.output)
         })
-        .command("inspect <file>") //TODO: there should be an option ignore-invalid, which silences the invalid type/field warnings
+        .command("inspect <file>", "Get metadata about a PTO file", (yargs) => {
+            //TODO: there should be an option ignore-invalid, which silences the invalid type/field warnings
+            yargs.positional("file", {
+                type: "string",
+                describe: "The PTO file you want to read",
+                normalize: true
+            })
+            .option("ignore-invalid", {
+                type: "boolean",
+                describe: "Ignore the invalid type/field warnings if you have custom fields in the PTO file.",
+                default: false,
+                alias: "i"
+            })
+        }, (args) => {
+            // Inspect
+            inspect(args.file);
+        })
         .help()
         //.command("help", "Show this help", (yargs) => {
         //    yargs.showHelp()
