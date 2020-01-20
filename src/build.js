@@ -22,7 +22,7 @@ module.exports = function build(manifest_json, mainfile, archivefile, outfile) {
 	else {console.error("[build] Stopped: File already exists"); return}
 	// Convert manifest from JSON to PTO Manifest format
 	HEAD_DATA = Buffer.from(json(manifest_json));
-	if (typeof mainfile == "string") CODE_DATA = Buffer.from(fs.readFileSync(mainfile));
+	if (typeof mainfile == "string") var CODE_stream = new fs.createReadStream(mainfile);
 	else CODE_DATA = Buffer.from(mainfile);
 	//var ARCH_TMP = fs.mkdtempSync("ptoarch")
 	if (archivefile !== "-") var ARCH_STRM = fstream.Reader({ 'path': archivefile, 'type': 'Directory' }) /* Read the source directory */
@@ -35,7 +35,8 @@ module.exports = function build(manifest_json, mainfile, archivefile, outfile) {
 	OutStream.write(Buffer.from(SEP_ARRAY));
 	OutStream.write(HEAD_DATA)
 	OutStream.write(Buffer.from(SEP_ARRAY));
-	OutStream.write(CODE_DATA);
+	if (CODE_stream) CODE_stream.pipe(OutStream, {end: true});
+	else OutStream.write(CODE_DATA);
 	OutStream.write(Buffer.from(SEP_ARRAY));
 	if (archivefile !== "-") ARCH_STRM.pipe(OutStream, {end: true}); // pipe in the archive
 	OutStream.write(Buffer.from(SEP_ARRAY));
