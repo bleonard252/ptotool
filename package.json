@@ -6,8 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
-  "git": "https://github.com/bleonard252/ptotool",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bleonard252/ptotool.git"
+  },
   "author": "Blake Leonard <blake@b252.gq>",
   "license": "CC-BY-4.0",
   "dependencies": {
