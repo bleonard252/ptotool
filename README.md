@@ -1,4 +1,7 @@
 # ptotool
+
+[![Join the chat at https://gitter.im/ptotool/community](https://badges.gitter.im/ptotool/community.svg)](https://gitter.im/ptotool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A tool used to make PTO files
 
 Usage:
